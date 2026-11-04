@@ -79,6 +79,16 @@ Each franchise owner can share a personal link — the promoter team is pre-sele
 | 15 | Guardians Of Kamboja | Sunil Narayanan | `https://YOUR-USERNAME.github.io/knpl7-cover-drive/?team=15` |
 | 16 | Varahas Of Vijayanagara | Umesh Krishna | `https://YOUR-USERNAME.github.io/knpl7-cover-drive/?team=16` |
 
+## Live status page (share with franchises & players)
+
+`https://knplseason7.github.io/knpl7-cover-drive/status.html` shows, live from the Google Sheet:
+- slots sponsored / available, number of sponsors, overall progress
+- every sponsorship with its sponsors, promoter team and "Only N left" / "Fully sponsored" badges; the jersey grid shows which team jerseys are taken
+- a **team-wise summary**: each franchise's sponsorships, slots and value (total and payment-confirmed), ranked; tap a team to see its sponsors
+- a **Sponsor this →** button on every open item that opens the form with that sponsorship pre-selected
+
+Add `?team=11` (etc.) to the status link and the promoter team is carried through to the form.
+
 ## Running the drive (admin)
 
 - New entries arrive with Status **Pending Verification**. The slot is reserved immediately (no double-booking — the script locks while checking availability).

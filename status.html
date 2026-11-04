@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KNPL-7 Sponsorship Status</title>
+  <meta name="description" content="Live status of KNPL Season 7 'Cover Drive' sponsorships — what's sponsored, by whom, and which slots are still open.">
+  <meta property="og:title" content="KNPL Season 7 · Live Sponsorship Status">
+  <meta property="og:description" content="See which Cover Drive sponsorships are still open and sponsor in a few taps.">
+  <meta property="og:image" content="assets/knpl-logo.png">
+  <meta name="theme-color" content="#0a1630">
+  <link rel="icon" href="assets/knpl-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;0,700;1,500&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .st-hero{padding:28px 16px 22px}
+    .st-hero .hero-logo{width:86px;height:86px;margin-bottom:12px}
+    .st-hero h1{font-size:clamp(34px,8vw,60px)}
+    .st-sub{font-family:var(--serif);font-size:clamp(18px,4.4vw,26px);text-transform:uppercase;margin:14px 0 4px}
+    .live{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-top:10px}
+    .live i{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(88,196,139,.6);animation:pulse 2s infinite}
+    .live.off i{background:var(--warn);animation:none}
+    @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(88,196,139,0)}100%{box-shadow:0 0 0 0 rgba(88,196,139,0)}}
+    .cta-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:6px 0 8px}
+    .kpi{background:linear-gradient(180deg,#172a4c,#11213f);border:1px solid var(--line-soft);border-radius:var(--radius);padding:16px}
+    .kpi b{display:block;font-family:var(--serif);font-size:clamp(24px,5vw,34px);color:var(--gold);line-height:1.1}
+    .kpi span{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+    .kpi.open b{color:var(--ok)}
+    .progress{margin:14px 0 4px}
+    .progress .meter{height:10px}
+    .progress .slot-line{margin-top:6px}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 14px}
+    .chipbtn{font:inherit;font-size:13px;font-weight:500;color:var(--text);background:rgba(255,255,255,.05);border:1px solid var(--line-soft);border-radius:999px;padding:7px 14px;cursor:pointer}
+    .chipbtn.on{background:var(--gold);color:var(--gold-ink);border-color:var(--gold);font-weight:600}
+    .rows{display:flex;flex-direction:column;gap:10px}
+    .srow{display:grid;grid-template-columns:44px 1.5fr 1fr 1.6fr auto;gap:16px;align-items:center;background:linear-gradient(180deg,#172a4c,#11213f);
+      border:1px solid var(--line-soft);border-radius:var(--radius);padding:14px 16px}
+    .srow.done{background:linear-gradient(180deg,#13223f,#0f1c35)}
+    .srow .no{font-size:12px;color:var(--gold);font-weight:600;letter-spacing:.1em}
+    .srow h4{margin:0;font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;line-height:1.35}
+    .srow .rate{font-family:var(--serif);color:var(--gold);font-size:18px;font-weight:700}
+    .srow .rate small{font-family:var(--sans);font-size:11px;color:var(--muted);font-weight:500}
+    .avail .slot-line{margin-top:6px}
+    .badge.few{background:rgba(240,181,74,.14);color:var(--warn);border:1px solid rgba(240,181,74,.4)}
+    .who{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .who .none{font-size:12.5px;color:var(--muted);font-style:italic}
+    .who .sp{display:flex;gap:8px;align-items:center;font-size:12.5px;min-width:0}
+    .who .sp img{width:24px;height:24px;border-radius:50%;object-fit:cover;flex:none;background:#fff}
+    .who .sp b{font-weight:600}
+    .who .sp small{color:var(--muted);display:block;font-size:11px}
+    .who .pend{color:var(--warn)}
+    .jgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:2px}
+    .jg{position:relative;aspect-ratio:1;border-radius:50%;overflow:hidden;border:2px solid var(--navy-600);background:#fff}
+    .jg img{width:100%;height:100%;object-fit:cover;display:block}
+    .jg.open{border-color:var(--ok)}
+    .jg.taken img{filter:grayscale(1) brightness(.55)}
+    .jg.taken::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:var(--gold);font-weight:700;font-size:14px}
+    .jlegend{font-size:11px;color:var(--muted);margin-top:6px}
+    .jlegend b{color:var(--ok);font-weight:600}
+    .board{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:10px}
+    .bt{display:flex;gap:12px;align-items:center;background:linear-gradient(180deg,#172a4c,#11213f);border:1px solid var(--line-soft);border-radius:14px;padding:12px}
+    .bt .rk{font-family:var(--serif);font-size:18px;color:var(--gold);width:26px;text-align:center;flex:none}
+    .bt img{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;background:#fff}
+    .bt div{min-width:0}
+    .bt .nm{flex:1}
+    .bt .val small{display:block;color:var(--muted);font-size:11px}
+    .bt.zero .val b{color:var(--muted);font-family:var(--serif);font-size:15px}
+    .bt b{display:block;font-size:13.5px;font-weight:600;line-height:1.25}
+    .bt small{color:var(--muted);font-size:12px}
+    .bt.zero{opacity:.55}
+    .tsum{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:14px 18px}
+    .tsum div{display:flex;flex-direction:column}
+    .tsum span{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+    .tsum b{font-family:var(--serif);font-size:22px;color:var(--gold)}
+    .board{align-items:start}
+    details.bt{display:block;padding:0}
+    details.bt summary{list-style:none;display:flex;gap:12px;align-items:center;padding:12px;cursor:pointer}
+    details.bt summary::-webkit-details-marker{display:none}
+    details.bt .val{margin-left:auto;text-align:right;flex:none}
+    details.bt .val b{font-family:var(--serif);color:var(--gold);font-size:17px}
+    details.bt[open] summary{border-bottom:1px solid var(--line-soft)}
+    .tlist{list-style:none;margin:0;padding:8px 12px 12px;display:flex;flex-direction:column;gap:6px}
+    .tlist li{display:flex;justify-content:space-between;gap:10px;font-size:12.5px}
+    .tlist li span:first-child{min-width:0}
+    .tlist small{display:block;color:var(--muted);font-size:11px}
+    .tlist .amt{white-space:nowrap;font-weight:600}
+    .tlist .pend{color:var(--warn)}
+    .note{font-size:12.5px;color:var(--muted);margin-top:10px}
+    @media (max-width:860px){
+      .srow{grid-template-columns:36px 1fr auto;gap:10px 12px}
+      .srow .avail{grid-column:2/4}
+      .srow .who{grid-column:1/4}
+      .srow .act{grid-column:1/4}
+      .srow .act .btn{width:100%}
+      .kpis{grid-template-columns:repeat(2,1fr)}
+      .jgrid{grid-template-columns:repeat(8,1fr)}
+    }
+  </style>
+</head>
+<body>
+
+<header class="hero st-hero">
+  <div class="hero-inner">
+    <div class="hero-logo"><img src="assets/knpl-logo.png" alt="KNPL logo"></div>
+    <p class="eyebrow">Kerala Namboodiris Premier League</p>
+    <h1>Season 7</h1>
+    <p class="hero-dates">11 · 12 · 13 · 14 February 2027</p>
+    <p class="hero-venue">FISAT &amp; Boundary Cricket Grounds, Angamaly</p>
+    <p class="st-sub">“Cover Drive” Sponsorship · Live Status</p>
+    <div class="live" id="live"><i></i><span id="liveText">Loading live status…</span></div>
+    <div class="cta-row">
+      <a class="btn gold" id="ctaTop" href="index.html">Sponsor now →</a>
+      <a class="btn ghost" id="shareWa" target="_blank" rel="noopener">Share on WhatsApp</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="kpis" id="kpis"></div>
+    <div class="progress card" id="progress"></div>
+  </section>
+
+  <section>
+    <div class="filters" role="tablist" aria-label="Filter">
+      <button class="chipbtn on" data-f="all">All sponsorships</button>
+      <button class="chipbtn" data-f="open">Still available</button>
+      <button class="chipbtn" data-f="done">Fully sponsored</button>
+    </div>
+    <div class="rows" id="rows"><p class="loading">Loading…</p></div>
+  </section>
+
+  <section>
+    <h3 class="group-title" style="margin-top:36px">Team-wise sponsorship summary</h3>
+    <p class="muted" style="margin:-4px 0 14px;font-size:13px">Sponsorships brought in by each franchise and their value (pending verification included). Tap a team to see its sponsors.</p>
+    <div class="card tsum" id="teamTotals"></div>
+    <div class="board" id="board"></div>
+    <p class="note">Rows marked <span style="color:var(--warn)">verifying</span> are reserved and awaiting payment confirmation by the KNPL Core Group. The page refreshes automatically every minute.</p>
+  </section>
+</main>
+
+<div class="cart" id="stickyCta">
+  <div class="cart-inner">
+    <div><span id="openCount">Slots still open</span><b id="openAmt"></b></div>
+    <a class="btn gold" id="ctaBottom" href="index.html">Sponsor now →</a>
+  </div>
+</div>
+
+<footer class="site-foot">
+  <div class="foot-org">
+    <img src="assets/one-logo.png" alt="ONE logo">
+    <div>
+      <b>Kerala Namboodiris Premier League</b>
+      <span>Organised by ONE (Organization For Namboodiris Evolution) · Reg. No. 238/IV/24</span>
+      <span>Questions? Contact your Team Coordinator / KNPL Core Group.</span>
+    </div>
+  </div>
+  <p class="tagline">Making the impossible a reality.</p>
+</footer>
+
+<script src="js/config.js"></script>
+<script>
+(function () {
+  const C = window.KNPL_CONFIG;
+  const $ = s => document.querySelector(s);
+  const inr = n => "₹" + Number(n).toLocaleString("en-IN");
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const team = n => C.TEAMS.find(t => t.name === n);
+  let items = C.ITEMS.map(i => Object.assign({ taken: 0, sponsors: [] }, i));
+  let filter = "all";
+
+  // Keep a promoter's ?team= link when moving to the sponsorship form
+  const params = new URLSearchParams(location.search);
+  const teamParam = params.get("team");
+  const formUrl = (code) => {
+    const q = new URLSearchParams();
+    if (teamParam) q.set("team", teamParam);
+    if (code) q.set("pick", code);
+    const s = q.toString();
+    return "index.html" + (s ? "?" + s : "");
+  };
+  $("#ctaTop").href = $("#ctaBottom").href = formUrl();
+  const shareText = `KNPL Season 7 · "Cover Drive" sponsorships — see what's still open and sponsor in a few taps: ${location.origin + location.pathname}${teamParam ? "?team=" + encodeURIComponent(teamParam) : ""}`;
+  $("#shareWa").href = "https://wa.me/?text=" + encodeURIComponent(shareText);
+
+  async function load() {
+    if (!C.API_URL) { setLive(false, "Demo mode — Google Sheet not connected"); render(); return; }
+    try {
+      const r = await fetch(C.API_URL + "?action=status&t=" + Date.now());
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.error);
+      const meta = Object.fromEntries(C.ITEMS.map(i => [i.code, i]));
+      items = d.items.map(i => Object.assign({}, meta[i.code] || {}, i));
+      setLive(true, "Live · updated " + new Date(d.updated).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }));
+    } catch (e) {
+      setLive(false, "Couldn't refresh — showing last known status");
+    }
+    render();
+  }
+  function setLive(ok, t) { $("#live").classList.toggle("off", !ok); $("#liveText").textContent = t; }
+
+  // merge the per-team jersey rows of one sponsor into a single line
+  function group(sponsors) {
+    const out = [];
+    sponsors.forEach(s => {
+      const g = s.jerseyTeam && out.find(x => x.jerseys && x.name === s.name && x.team === s.team);
+      if (g) { g.jerseys.push(s.jerseyTeam); g.confirmed = g.confirmed && s.confirmed; }
+      else out.push(Object.assign({}, s, { jerseys: s.jerseyTeam ? [s.jerseyTeam] : null }));
+    });
+    return out;
+  }
+
+  function render() {
+    const totalSlots = items.reduce((a, i) => a + i.slots, 0);
+    const taken = items.reduce((a, i) => a + Math.min(i.taken, i.slots), 0);
+    const open = totalSlots - taken;
+    const openValue = items.reduce((a, i) => a + Math.max(0, i.slots - i.taken) * i.rate, 0);
+    const sponsorNames = new Set(items.flatMap(i => i.sponsors.map(s => s.name.trim().toLowerCase())));
+    const fullItems = items.filter(i => i.taken >= i.slots).length;
+
+    $("#kpis").innerHTML = `
+      <div class="kpi"><b>${taken}</b><span>Slots sponsored</span></div>
+      <div class="kpi open"><b>${open}</b><span>Slots available</span></div>
+      <div class="kpi"><b>${sponsorNames.size}</b><span>Sponsors</span></div>
+      <div class="kpi"><b>${fullItems}/${items.length}</b><span>Fully sponsored</span></div>`;
+    $("#progress").innerHTML = `
+      <div class="meter"><i style="width:${totalSlots ? (taken / totalSlots) * 100 : 0}%"></i></div>
+      <div class="slot-line"><span>${taken} of ${totalSlots} slots sponsored</span><span>${Math.round(totalSlots ? taken / totalSlots * 100 : 0)}%</span></div>`;
+    $("#openCount").textContent = open + (open === 1 ? " slot still open" : " slots still open");
+    $("#openAmt").textContent = open ? "Worth " + inr(openValue) : "All sponsored — thank you!";
+
+    const list = items.filter(i => filter === "all" || (filter === "open" ? i.taken < i.slots : i.taken >= i.slots));
+    $("#rows").innerHTML = list.length ? list.map(row).join("") : `<p class="loading">Nothing here yet.</p>`;
+
+    // team-wise summary: every sponsorship each franchise brought in, with value
+    const tally = Object.fromEntries(C.TEAMS.map(t => [t.name, { n: 0, amt: 0, conf: 0, list: [] }]));
+    items.forEach(i => i.sponsors.forEach(s => {
+      const T = tally[s.team]; if (!T) return;
+      const q = s.qty || 1, v = q * i.rate;
+      T.n += q; T.amt += v; if (s.confirmed) T.conf += v;
+      const label = i.name.replace(/^KNPL-7\s+|^KNPL\s+/i, "") + (s.jerseyTeam ? " · " + s.jerseyTeam : q > 1 ? " × " + q : "");
+      const ex = T.list.find(x => x.name === s.name && x.code === i.code && s.jerseyTeam);
+      if (ex) { ex.v += v; ex.label += ", " + s.jerseyTeam; ex.confirmed = ex.confirmed && s.confirmed; }
+      else T.list.push({ name: s.name, code: i.code, label, v, confirmed: s.confirmed });
+    }));
+    const ranked = C.TEAMS.map(t => Object.assign({}, t, tally[t.name])).sort((a, b) => b.amt - a.amt || b.n - a.n || a.name.localeCompare(b.name));
+    const grand = ranked.reduce((a, t) => a + t.amt, 0), grandConf = ranked.reduce((a, t) => a + t.conf, 0);
+    const active = ranked.filter(t => t.amt).length;
+    $("#teamTotals").innerHTML = `
+      <div><span>Total sponsorship value</span><b>${inr(grand)}</b></div>
+      <div><span>Payment confirmed</span><b>${inr(grandConf)}</b></div>
+      <div><span>Teams contributing</span><b>${active} / ${C.TEAMS.length}</b></div>`;
+    let rank = 0, prev = null;
+    $("#board").innerHTML = ranked.map((t, idx) => {
+      if (prev === null || t.amt !== prev) rank = idx + 1; prev = t.amt;
+      const head = `<span class="rk">${t.amt ? rank : "–"}</span><img src="${t.logo}" alt="">
+        <div class="nm"><b>${esc(t.name)}</b><small>${t.n ? `${t.list.length} ${t.list.length === 1 ? "sponsor" : "sponsors"} · ${t.n} ${t.n === 1 ? "slot" : "slots"}` : "No sponsorships yet"}</small></div>
+        <div class="val"><b>${inr(t.amt)}</b>${t.amt && t.conf !== t.amt ? `<small>${inr(t.conf)} confirmed</small>` : ""}</div>`;
+      if (!t.amt) return `<div class="bt zero">${head}</div>`;
+      return `<details class="bt"><summary>${head}</summary><ul class="tlist">${t.list.map(x =>
+        `<li><span><b>${esc(x.name)}</b><small>${esc(x.label)}${x.confirmed ? "" : ' · <span class="pend">verifying</span>'}</small></span><span class="amt">${inr(x.v)}</span></li>`).join("")}</ul></details>`;
+    }).join("");
+  }
+
+  function row(it) {
+    const left = Math.max(0, it.slots - it.taken), full = left === 0;
+    const pct = (Math.min(it.taken, it.slots) / it.slots) * 100;
+    const badge = full ? `<span class="badge sold">✓ Fully sponsored</span>`
+      : left <= Math.max(1, Math.floor(it.slots * 0.25)) && it.slots > 1 ? `<span class="badge few">Only ${left} left</span>`
+      : `<span class="badge open">${it.slots > 1 ? left + " available" : "Available"}</span>`;
+    const g = group(it.sponsors || []);
+    let who;
+    if (it.perTeam) {
+      const takenT = Object.fromEntries((it.sponsors || []).filter(s => s.jerseyTeam).map(s => [s.jerseyTeam, s.name]));
+      who = `<div class="jgrid">${C.TEAMS.map(t => `<div class="jg ${takenT[t.name] ? "taken" : "open"}" title="${esc(t.name)}${takenT[t.name] ? " — sponsored by " + esc(takenT[t.name]) : " — available"}"><img src="${t.logo}" alt="${esc(t.name)}"></div>`).join("")}</div>
+        <div class="jlegend"><b>Green ring</b> = jersey available · ✓ = sponsored</div>
+        ${g.map(sp).join("")}`;
+    } else {
+      who = g.length ? g.map(sp).join("") : `<span class="none">Be the first to sponsor this</span>`;
+    }
+    return `<div class="srow ${full ? "done" : ""}">
+      <span class="no">${it.code.replace("CD", "")}</span>
+      <div><h4>${esc(it.name)}</h4><div class="rate">${inr(it.rate)}${it.slots > 1 ? " <small>/ " + (it.perTeam ? "team" : "slot") + "</small>" : ""}</div></div>
+      <div class="avail">${badge}${it.slots > 1 ? `<div class="meter" style="margin-top:8px"><i style="width:${pct}%"></i></div><div class="slot-line"><span>${it.taken} of ${it.slots} taken</span></div>` : ""}</div>
+      <div class="who">${who}</div>
+      <div class="act">${full ? "" : `<a class="btn gold small" href="${formUrl(it.code)}">Sponsor this →</a>`}</div>
+    </div>`;
+  }
+
+  function sp(s) {
+    const t = team(s.jerseys && s.jerseys.length === 1 ? s.jerseys[0] : s.team);
+    return `<div class="sp">${t ? `<img src="${t.logo}" alt="">` : ""}<div><b>${esc(s.name)}${!s.jerseys && s.qty > 1 ? " × " + s.qty : ""}</b>
+      <small>${s.jerseys ? "Jersey: " + s.jerseys.map(esc).join(", ") + " · " : ""}Promoted by ${esc(s.team)}${s.confirmed ? "" : ' · <span class="pend">verifying</span>'}</small></div></div>`;
+  }
+
+  document.querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => {
+    filter = b.dataset.f;
+    document.querySelectorAll("[data-f]").forEach(x => x.classList.toggle("on", x === b));
+    render();
+  }));
+
+  render();
+  load();
+  setInterval(load, 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+})();
+</script>
+</body>
+</html>

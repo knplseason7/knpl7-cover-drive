@@ -44,6 +44,7 @@
         state.items = data.items.map(i => Object.assign({}, meta[i.code] || {}, i));
         $("#liveNote").textContent = "Live status — updated " + new Date(data.updated).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) + ".";
       }
+      applyPick();
       // drop cart entries that are no longer available
       const jt = jerseyItem();
       if (jt) {
@@ -228,6 +229,7 @@
     });
     // Personal promoter links: ?team=11 or ?team=Madhura%20Mavericks
     const q = new URLSearchParams(location.search).get("team");
+    if (q) document.querySelectorAll('a[href="status.html"]').forEach(a => a.href = "status.html?team=" + encodeURIComponent(q));
     if (q) {
       const t = /^\d+$/.test(q) ? C.TEAMS[+q - 1] : C.TEAMS.find(x => x.name.toLowerCase() === q.toLowerCase());
       if (t) {
@@ -491,6 +493,18 @@
       catch (err) { $("#lookupError").textContent = err.message; }
       finally { b.disabled = false; b.textContent = "Find"; }
     });
+  }
+
+  // ?pick=CD02 (from the status page) pre-selects that sponsorship once, if still available
+  let pickDone = false;
+  function applyPick() {
+    if (pickDone) return; pickDone = true;
+    const code = new URLSearchParams(location.search).get("pick");
+    const it = code && state.items.find(i => i.code === code.toUpperCase());
+    if (!it || it.taken >= it.slots) return;
+    if (it.perTeam) { setTimeout(openJersey, 300); return; }
+    state.cart[it.code] = 1;
+    setTimeout(() => { const el = document.querySelector(`[data-code="${it.code}"]`) || $("#featuredCard"); el && el.scrollIntoView({ behavior: "smooth", block: "center" }); }, 300);
   }
 
   /* ---------------------------- start ---------------------------- */
