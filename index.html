@@ -68,6 +68,8 @@
     <h3 class="group-title">Team, hospitality &amp; award sponsorships</h3>
     <div class="grid" id="gridRest"></div>
 
+    <div class="card selection" id="selSummary" hidden></div>
+
     <p class="loading" id="loading">Loading live slot status…</p>
   </section>
 
@@ -242,6 +244,28 @@
       <button class="btn gold" id="lookupBtn" value="go">Find</button>
     </div>
   </form>
+</dialog>
+
+<dialog id="jerseyDlg" class="jersey-dlg">
+  <div class="jersey-head">
+    <div>
+      <p class="eyebrow gold">KNPL Team Jersey Sponsor · ₹7,500 per team</p>
+      <h3>Choose the team jerseys</h3>
+      <p class="muted small">Your brand goes on the jersey of every team you select. Teams already sponsored can't be chosen.</p>
+    </div>
+    <div class="jersey-quick">
+      <button type="button" class="linkish" id="jerseyAll">Select all available</button>
+      <button type="button" class="linkish" id="jerseyNone">Clear</button>
+    </div>
+  </div>
+  <div class="jersey-grid" id="jerseyGrid"></div>
+  <div class="jersey-foot">
+    <span id="jerseyTotal"></span>
+    <div class="jersey-actions">
+      <button type="button" class="btn ghost" onclick="this.closest('dialog').close()">Cancel</button>
+      <button type="button" class="btn gold" id="jerseyDone">Done</button>
+    </div>
+  </div>
 </dialog>
 
 <div class="toast" id="toast" role="status"></div>

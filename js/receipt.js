@@ -158,14 +158,24 @@ window.KNPLReceipt = (function () {
     [["NO.", xNo, "left"], ["SPONSORSHIP", xName, "left"], ["QTY", xQty, "center"], ["RATE (RS)", xRate, "right"], ["AMOUNT (RS)", xAmt, "right"]]
       .forEach(([t, x, al]) => text(t, x, y + 5.4, { f: F.bold, size: 8, color: C.navy, align: al }));
     y += 8;
-    result.items.forEach((it, i) => {
-      if (i % 2) box(M, y, W - 2 * M, 8, C.soft);
+    // group the per-team jersey rows into one line with the team names underneath
+    const rowsOut = [];
+    result.items.forEach(it => {
+      const g = it.jerseyTeam && rowsOut.find(r => r.code === it.code && r.teams);
+      if (g) { g.qty += it.qty; g.amount += it.amount; g.teams.push(it.jerseyTeam); }
+      else rowsOut.push(Object.assign({}, it, { teams: it.jerseyTeam ? [it.jerseyTeam] : null }));
+    });
+    rowsOut.forEach((it, i) => {
+      const sub = it.teams ? wrap("Teams: " + it.teams.join(", "), F.reg, 7.6, xQty - xName - 10) : [];
+      const rh = 8 + sub.length * 3.6;
+      if (i % 2) box(M, y, W - 2 * M, rh, C.soft);
       text(String(i + 1).padStart(2, "0"), xNo, y + 5.4, { size: 9, color: C.muted });
       text(fit(it.name, F.reg, 9.3, xQty - xName - 10), xName, y + 5.4, { size: 9.3 });
+      sub.forEach((l, k) => text(l, xName, y + 9.2 + k * 3.6, { size: 7.6, color: C.muted }));
       text(String(it.qty), xQty, y + 5.4, { size: 9.3, align: "center" });
       text(Number(it.rate).toLocaleString("en-IN"), xRate, y + 5.4, { size: 9.3, align: "right" });
       text(Number(it.amount).toLocaleString("en-IN"), xAmt, y + 5.4, { size: 9.3, align: "right" });
-      y += 8;
+      y += rh;
     });
     box(M, y, W - 2 * M, 0.5, C.navy);
     y += 7.5;

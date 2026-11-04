@@ -118,7 +118,11 @@ window.KNPLPoster = (function () {
 
     // Sponsor panel — measure first
     const d = result.data;
-    const labels = result.items.map(i => (i.name.replace(/^KNPL-7\s+/i, "").replace(/^KNPL\s+/i, "") + (i.qty > 1 ? " × " + i.qty : "")).toUpperCase());
+    const short = n => n.replace(/^KNPL-7\s+/i, "").replace(/^KNPL\s+/i, "");
+    const jersey = result.items.filter(i => i.jerseyTeam);
+    const labels = result.items.filter(i => !i.jerseyTeam).map(i => (short(i.name) + (i.qty > 1 ? " × " + i.qty : "")).toUpperCase());
+    if (jersey.length && jersey.length <= 3) jersey.forEach(i => labels.push(("Jersey · " + i.jerseyTeam).toUpperCase()));
+    else if (jersey.length) labels.push(("Team Jersey Sponsor × " + jersey.length).toUpperCase());
     const innerW = 780;
     const panelTop = 476, footerTop = H - 120, bottomBlock = 250;
     const maxPanel = footerTop - bottomBlock - panelTop;

@@ -11,6 +11,7 @@
   const state = {
     items: C.ITEMS.map(i => Object.assign({ taken: 0, sponsors: [] }, i)),
     cart: {},              // code -> qty
+    jersey: [],            // team names chosen for the per-team (jersey) sponsorship
     details: null,
     files: { logo: null, leaflet: null, proof: null },
     logoPng: null,         // normalised logo for poster / receipt
@@ -32,7 +33,7 @@
           const mine = rows.filter(r => r.code === it.code);
           return Object.assign({}, it, {
             taken: mine.reduce((a, r) => a + r.qty, 0),
-            sponsors: mine.map(r => ({ name: r.displayName, team: r.team, qty: r.qty, confirmed: false }))
+            sponsors: mine.map(r => ({ name: r.displayName, team: r.team, jerseyTeam: r.jerseyTeam || "", qty: r.qty, confirmed: false }))
           });
         });
       } else {
@@ -44,8 +45,15 @@
         $("#liveNote").textContent = "Live status — updated " + new Date(data.updated).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) + ".";
       }
       // drop cart entries that are no longer available
+      const jt = jerseyItem();
+      if (jt) {
+        const gone = takenTeams(jt);
+        state.jersey = state.jersey.filter(t => !gone.includes(t));
+        if (state.cart[jt.code]) { if (state.jersey.length) state.cart[jt.code] = state.jersey.length; else delete state.cart[jt.code]; }
+      }
       Object.keys(state.cart).forEach(code => {
         const it = state.items.find(i => i.code === code);
+        if (it && it.perTeam) return;
         const left = it ? it.slots - it.taken : 0;
         if (left <= 0) delete state.cart[code]; else state.cart[code] = Math.min(state.cart[code], left);
       });
@@ -70,10 +78,16 @@
 
   function sponsorList(it) {
     if (!it.sponsors || !it.sponsors.length) return "";
-    return `<ul class="sponsors">${it.sponsors.map(s => {
-      const t = teamByName(s.team);
+    const grouped = [];
+    it.sponsors.forEach(s => {
+      const g = s.jerseyTeam && grouped.find(x => x.jerseys && x.name === s.name && x.team === s.team);
+      if (g) { g.jerseys.push(s.jerseyTeam); g.confirmed = g.confirmed && s.confirmed; }
+      else grouped.push(Object.assign({}, s, { jerseys: s.jerseyTeam ? [s.jerseyTeam] : null }));
+    });
+    return `<ul class="sponsors">${grouped.map(s => {
+      const t = teamByName(s.jerseys && s.jerseys.length === 1 ? s.jerseys[0] : s.team);
       return `<li>${t ? `<img src="${t.logo}" alt="">` : ""}<div><b>${esc(s.name)}${s.qty > 1 ? " × " + s.qty : ""}</b>
-        <small>Promoted by ${esc(s.team)}${s.confirmed ? "" : ' · <span class="pend">verifying</span>'}</small></div></li>`;
+        <small>${s.jerseys ? "Jersey: " + s.jerseys.map(esc).join(", ") + " · " : ""}Promoted by ${esc(s.team)}${s.confirmed ? "" : ' · <span class="pend">verifying</span>'}</small></div></li>`;
     }).join("")}</ul>`;
   }
 
@@ -83,10 +97,15 @@
     const sel = state.cart[it.code] || 0;
     const no = it.code.replace("CD", "");
     const csrLogo = it.csr ? `<img class="csr" src="assets/${it.csr}.png" alt="${it.csr}">` : "";
-    const pick = full ? `<span class="badge sold">✓ Sponsored</span>` :
-      `<div class="pick"><span class="tick"><i>${sel ? "✓" : ""}</i>${sel ? "Selected" : "Select"}</span>
-        ${it.slots > 1 && sel ? `<div class="qty" data-qty="${it.code}"><button type="button" data-d="-1" aria-label="Fewer">−</button><span>${sel}</span><button type="button" data-d="1" aria-label="More">+</button></div>` : ""}
-       </div>`;
+    let pick;
+    if (full) pick = `<span class="badge sold">✓ All slots sponsored</span>`;
+    else if (it.perTeam) pick = `
+      ${sel ? `<div class="chips">${state.jersey.map(t => `<span class="chip"><img src="${teamByName(t).logo}" alt="">${esc(t)}</span>`).join("")}</div>` : ""}
+      <div class="pick"><span class="tick"><i>${sel ? "✓" : ""}</i>${sel ? sel + (sel === 1 ? " team" : " teams") + " · " + inr(sel * it.rate) : "Teams"}</span>
+        <button type="button" class="btn outline small" data-jersey>${sel ? "Change teams" : "Choose teams"}</button></div>`;
+    else if (it.slots > 1) pick = `<div class="pick"><span class="tick"><i>${sel ? "✓" : ""}</i>${sel ? "Qty " + sel + " · " + inr(sel * it.rate) : "Quantity"}</span>
+        <div class="qty" data-qty="${it.code}"><button type="button" data-d="-1" aria-label="Fewer" ${sel ? "" : "disabled"}>−</button><span>${sel}</span><button type="button" data-d="1" aria-label="More" ${sel >= left ? "disabled" : ""}>+</button></div></div>`;
+    else pick = `<div class="pick"><span class="tick"><i>${sel ? "✓" : ""}</i>${sel ? "Selected" : "Select"}</span></div>`;
     return `<div class="item ${it.flagship ? "flag" : ""} ${sel ? "selected" : ""} ${full ? "full" : ""}" data-code="${it.code}" ${full ? "" : 'tabindex="0" role="button"'} aria-pressed="${!!sel}">
       <div class="item-top"><div><span class="item-no">${no}</span><h4>${esc(it.name)}</h4></div>${csrLogo}</div>
       <div class="rate">${inr(it.rate)}${it.slots > 1 ? '<small style="font-size:12px;color:var(--muted);font-family:var(--sans);font-weight:500"> / slot</small>' : ""}</div>
@@ -119,15 +138,51 @@
   function toggle(code) {
     const it = state.items.find(i => i.code === code);
     if (!it || it.taken >= it.slots) return;
+    if (it.perTeam) { openJersey(); return; }
     if (state.cart[code]) delete state.cart[code]; else state.cart[code] = 1;
     render();
   }
 
   function cartLines() {
-    return Object.entries(state.cart).map(([code, qty]) => {
-      const it = state.items.find(i => i.code === code);
-      return { code, name: it.name, qty, rate: it.rate, amount: qty * it.rate };
+    return C.ITEMS.filter(i => state.cart[i.code]).map(meta => {
+      const it = state.items.find(i => i.code === meta.code) || meta;
+      const qty = state.cart[it.code];
+      return { code: it.code, name: it.name, qty, rate: it.rate, amount: qty * it.rate, teams: it.perTeam ? state.jersey.slice() : null };
     });
+  }
+
+  /* ---------------------------- jersey team picker ---------------------------- */
+  const jerseyItem = () => state.items.find(i => i.perTeam);
+  const takenTeams = it => (it.sponsors || []).map(s => s.jerseyTeam).filter(Boolean);
+
+  function openJersey() {
+    const it = jerseyItem(); if (!it) return;
+    const taken = Object.fromEntries((it.sponsors || []).filter(s => s.jerseyTeam).map(s => [s.jerseyTeam, s.name]));
+    const draft = new Set(state.jersey);
+    const dlg = $("#jerseyDlg");
+    const paint = () => {
+      $("#jerseyGrid").innerHTML = C.TEAMS.map(t => {
+        const by = taken[t.name], on = draft.has(t.name);
+        return `<button type="button" class="jt ${on ? "on" : ""}" data-jt="${esc(t.name)}" ${by ? "disabled" : ""} aria-pressed="${on}">
+          <img src="${t.logo}" alt=""><b>${esc(t.name)}</b>
+          <small>${by ? "Sponsored by " + esc(by) : on ? "✓ Selected" : "Available"}</small></button>`;
+      }).join("");
+      const n = draft.size;
+      $("#jerseyTotal").innerHTML = n ? `${n} ${n === 1 ? "team" : "teams"} × ${inr(it.rate)} = <b>${inr(n * it.rate)}</b>` : "Tap the teams whose jerseys you want to sponsor";
+    };
+    $("#jerseyGrid").onclick = e => {
+      const b = e.target.closest("[data-jt]"); if (!b || b.disabled) return;
+      const n = b.dataset.jt; draft.has(n) ? draft.delete(n) : draft.add(n); paint();
+    };
+    $("#jerseyAll").onclick = () => { C.TEAMS.forEach(t => { if (!taken[t.name]) draft.add(t.name); }); paint(); };
+    $("#jerseyNone").onclick = () => { draft.clear(); paint(); };
+    $("#jerseyDone").onclick = () => {
+      state.jersey = C.TEAMS.map(t => t.name).filter(n => draft.has(n));
+      if (state.jersey.length) state.cart[it.code] = state.jersey.length; else delete state.cart[it.code];
+      dlg.close(); render();
+    };
+    paint();
+    dlg.showModal();
   }
   const cartTotal = () => cartLines().reduce((a, l) => a + l.amount, 0);
 
@@ -137,6 +192,16 @@
     $("#cart").hidden = !show;
     $("#cartCount").textContent = lines.length + (lines.length === 1 ? " sponsorship selected" : " sponsorships selected");
     $("#cartTotal").textContent = inr(cartTotal());
+    $("#cartNext").textContent = "Continue →";
+    const box = $("#selSummary");
+    box.hidden = !lines.length;
+    box.innerHTML = lines.length ? `<h4 class="card-title">Your selection</h4>${summaryRows(lines)}
+      <div class="total-line"><span>Total amount payable</span><b>${inr(cartTotal())}</b></div>
+      <div class="form-actions" style="justify-content:flex-end"><button type="button" class="btn gold" data-go="2">Continue to sponsor details →</button></div>` : "";
+  }
+
+  function summaryRows(lines) {
+    return lines.map(l => `<div class="sum-row"><span>${esc(l.name)}<small class="sum-sub">${l.qty} × ${inr(l.rate)}${l.teams ? " · " + l.teams.map(esc).join(", ") : ""}</small></span><span>${inr(l.amount)}</span></div>`).join("");
   }
 
   /* ---------------------------- navigation ---------------------------- */
@@ -236,8 +301,7 @@
 
   function renderPay() {
     const lines = cartLines(), total = cartTotal();
-    $("#summaryList").innerHTML = lines.map(l =>
-      `<div class="sum-row"><span>${esc(l.name)}${l.qty > 1 ? " × " + l.qty : ""}</span><span>${inr(l.amount)}</span></div>`).join("");
+    $("#summaryList").innerHTML = summaryRows(lines);
     $("#payTotal").textContent = inr(total);
     const note = ("KNPL7 " + (state.details ? state.details.displayName : "")).slice(0, 40);
     const uri = upiUri(total, note);
@@ -266,7 +330,7 @@
     const lines = cartLines();
     const payload = {
       action: "submit",
-      data: Object.assign({}, state.details, pay, { items: lines.map(l => ({ code: l.code, qty: l.qty })) }),
+      data: Object.assign({}, state.details, pay, { items: lines.map(l => l.teams ? { code: l.code, qty: l.qty, teams: l.teams } : { code: l.code, qty: l.qty }) }),
       files: { logo: state.files.logo, leaflet: state.files.leaflet, proof: state.files.proof }
     };
     btn.disabled = true; btn.textContent = "Submitting…"; $("#payError").textContent = "";
@@ -277,15 +341,18 @@
         const rows = demoRows();
         for (const l of lines) {
           const it = C.ITEMS.find(i => i.code === l.code);
-          const taken = rows.filter(r => r.code === l.code).reduce((a, r) => a + r.qty, 0);
-          if (taken + l.qty > it.slots) throw new Error(`"${it.name}" was just taken. Please go back and choose again.`);
+          const mine = rows.filter(r => r.code === l.code);
+          if (l.teams) { const t = l.teams.find(x => mine.some(r => r.jerseyTeam === x)); if (t) throw new Error(`The ${t} jersey was just taken. Please go back and choose again.`); }
+          else if (mine.reduce((a, r) => a + r.qty, 0) + l.qty > it.slots) throw new Error(`"${it.name}" was just taken. Please go back and choose again.`);
         }
         const seq = (+localStorage.getItem(DEMO_KEY + "_seq") || 0) + 1;
         localStorage.setItem(DEMO_KEY + "_seq", seq);
         const receiptNo = "DEMO-CD-" + String(seq).padStart(4, "0");
-        lines.forEach(l => rows.push({ code: l.code, qty: l.qty, displayName: state.details.displayName, team: state.details.team, receiptNo }));
+        const out = [];
+        lines.forEach(l => (l.teams ? l.teams.map(t => ({ ...l, qty: 1, amount: l.rate, jerseyTeam: t })) : [{ ...l, jerseyTeam: "" }]).forEach(x => out.push(x)));
+        out.forEach(l => rows.push({ code: l.code, qty: l.qty, displayName: state.details.displayName, team: state.details.team, jerseyTeam: l.jerseyTeam, receiptNo }));
         saveDemoRows(rows);
-        res = { ok: true, receiptNo, timestamp: new Date().toISOString(), status: "Pending Verification", total: cartTotal(), items: lines };
+        res = { ok: true, receiptNo, timestamp: new Date().toISOString(), status: "Pending Verification", total: cartTotal(), items: out };
       } else {
         const r = await fetch(C.API_URL, { method: "POST", body: JSON.stringify(payload) }); // text/plain → no CORS preflight
         res = await r.json();
@@ -312,7 +379,7 @@
     $("#shareWa").href = "https://wa.me/?text=" + encodeURIComponent(msg);
     go(4);
     await window.KNPLPoster.draw($("#posterCanvas"), posterData());
-    state.cart = {};
+    state.cart = {}; state.jersey = [];
     loadStatus();
   }
 
@@ -353,6 +420,7 @@
         if (n <= 0) delete state.cart[code]; else state.cart[code] = Math.min(n, it.slots - it.taken);
         render(); return;
       }
+      if (e.target.closest("[data-jersey]")) { openJersey(); return; }
       const f = e.target.closest("[data-feature]");
       if (f) { toggle(f.dataset.feature); return; }
       const item = e.target.closest(".item:not(.full)");

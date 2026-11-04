@@ -36,7 +36,7 @@ const ITEMS = [
   { code: 'CD04', name: 'KNPL-7 Sahayog Sponsor',             slots: 2,  rate: 25000 },
   { code: 'CD05', name: 'KNPL-7 Farmrise Sponsor',            slots: 2,  rate: 15000 },
   { code: 'CD06', name: 'KNPL-7 "Bronze Brigade" Award - 1',  slots: 1,  rate: 15000 },
-  { code: 'CD07', name: 'KNPL Team Jersey Sponsor',           slots: 16, rate: 7500 },
+  { code: 'CD07', name: 'KNPL Team Jersey Sponsor',           slots: 16, rate: 7500, perTeam: true },
   { code: 'CD08', name: 'KNPL-7 Lunch Sponsor',               slots: 20, rate: 5000 },
   { code: 'CD09', name: 'KNPL-7 Fair Play Award Sponsor',     slots: 1,  rate: 5000 },
   { code: 'CD10', name: 'KNPL-7 Star of the League Sponsor',  slots: 1,  rate: 5000 },
@@ -60,7 +60,7 @@ const HEADERS = [
   'Receipt Total (Rs)', 'Sponsor / Company Name', 'Name to Advertise', 'Contact Person', 'Mobile',
   'Email', 'City / Address', 'Social Media Handles', 'Promoter Team', 'Payment Mode',
   'Transaction Ref / UTR', 'Payment Date', 'Logo URL', 'Leaflet URL', 'Payment Proof URL',
-  'Message / Notes', 'Logo File ID'
+  'Message / Notes', 'Logo File ID', 'Jersey Team'
 ];
 const COL = {}; HEADERS.forEach((h, i) => COL[h] = i);
 
@@ -179,6 +179,7 @@ function status_() {
       sponsors.push({
         name: String(r[COL['Name to Advertise']] || r[COL['Sponsor / Company Name']]),
         team: String(r[COL['Promoter Team']]),
+        jerseyTeam: String(r[COL['Jersey Team']] || ''),
         qty: q,
         confirmed: r[COL['Status']] === 'Confirmed'
       });
@@ -205,19 +206,31 @@ function submit_(body) {
   });
 
   let total = 0;
-  const lines = d.items.map(sel => {
+  const lines = [];
+  d.items.forEach(sel => {
     const it = ITEMS.filter(x => x.code === sel.code)[0];
     if (!it) throw new Error('Unknown sponsorship ' + sel.code);
+    const active = rows.filter(r => r[COL['Item Code']] === it.code && isActive_(r));
+    if (it.perTeam) {
+      const teams = Array.isArray(sel.teams) ? sel.teams.filter((t, i, a) => a.indexOf(t) === i) : [];
+      if (!teams.length) throw new Error('Please choose the team(s) for "' + it.name + '".');
+      const takenTeams = active.map(r => String(r[COL['Jersey Team']]));
+      teams.forEach(t => {
+        if (TEAMS.indexOf(t) === -1) throw new Error('Invalid jersey team: ' + t);
+        if (takenTeams.indexOf(t) !== -1) throw new Error('Sorry, the ' + t + ' jersey was just sponsored by someone else. Please refresh and choose again.');
+      });
+      teams.forEach(t => { total += it.rate; lines.push({ it: it, qty: 1, amount: it.rate, jerseyTeam: t }); });
+      return;
+    }
     const qty = Math.max(1, Math.floor(Number(sel.qty) || 1));
-    let taken = 0;
-    rows.forEach(r => { if (r[COL['Item Code']] === it.code && isActive_(r)) taken += Number(r[COL['Qty']]) || 1; });
+    const taken = active.reduce((a, r) => a + (Number(r[COL['Qty']]) || 1), 0);
     if (taken + qty > it.slots) {
       throw new Error('Sorry, "' + it.name + '" was just taken' +
         (it.slots - taken > 0 ? ' — only ' + (it.slots - taken) + ' slot(s) left.' : '.') +
         ' Please refresh and choose again.');
     }
     total += qty * it.rate;
-    return { it: it, qty: qty, amount: qty * it.rate };
+    lines.push({ it: it, qty: qty, amount: qty * it.rate, jerseyTeam: '' });
   });
 
   // Files
@@ -260,6 +273,7 @@ function submit_(body) {
     row[COL['Payment Proof URL']] = proof ? proof.getUrl() : '';
     row[COL['Message / Notes']] = clean_(d.notes);
     row[COL['Logo File ID']] = logo ? logo.getId() : '';
+    row[COL['Jersey Team']] = l.jerseyTeam;
     return row;
   });
   const sh = sheet_();
@@ -272,7 +286,7 @@ function submit_(body) {
     timestamp: now.toISOString(),
     status: SETTINGS.DEFAULT_STATUS,
     total: total,
-    items: lines.map(l => ({ code: l.it.code, name: l.it.name, qty: l.qty, rate: l.it.rate, amount: l.amount }))
+    items: lines.map(l => ({ code: l.it.code, name: l.it.name, qty: l.qty, rate: l.it.rate, amount: l.amount, jerseyTeam: l.jerseyTeam }))
   };
   try { sendMails_(d, result); } catch (err) { Logger.log('Mail failed: ' + err); }
   return result;
@@ -303,7 +317,8 @@ function lookup_(receipt, mobile) {
     total: Number(r0[COL['Receipt Total (Rs)']]),
     items: rows.map(r => ({
       code: r[COL['Item Code']], name: r[COL['Sponsorship']], qty: Number(r[COL['Qty']]),
-      rate: Number(r[COL['Rate (Rs)']]), amount: Number(r[COL['Amount (Rs)']])
+      rate: Number(r[COL['Rate (Rs)']]), amount: Number(r[COL['Amount (Rs)']]),
+      jerseyTeam: String(r[COL['Jersey Team']] || '')
     })),
     data: {
       sponsorName: r0[COL['Sponsor / Company Name']], displayName: r0[COL['Name to Advertise']],
@@ -344,7 +359,7 @@ function colLetter_(n) {
 function inr_(n) { return 'Rs. ' + Number(n).toLocaleString('en-IN'); }
 
 function sendMails_(d, res) {
-  const list = res.items.map(i => `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${i.name}${i.qty > 1 ? ' × ' + i.qty : ''}</td>` +
+  const list = res.items.map(i => `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${i.name}${i.jerseyTeam ? ' — ' + i.jerseyTeam : ''}${i.qty > 1 ? ' × ' + i.qty : ''}</td>` +
     `<td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${inr_(i.amount)}</td></tr>`).join('');
   const html =
     `<div style="font-family:Arial,sans-serif;max-width:560px;color:#1a2238">
