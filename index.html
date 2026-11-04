@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KNPL-7 Cover Drive Sponsorship</title>
+  <meta name="description" content="Sponsor KNPL Season 7 — 'Cover Drive' category. 11–14 February 2027, FISAT & Boundary Cricket Grounds, Angamaly.">
+  <meta property="og:title" content="KNPL Season 7 · Cover Drive Sponsorship">
+  <meta property="og:description" content="Choose your sponsorship, pay online and download your receipt and sponsor poster instantly.">
+  <meta property="og:image" content="assets/knpl-logo.png">
+  <meta name="theme-color" content="#0a1630">
+  <link rel="icon" href="assets/knpl-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;0,700;1,500&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-logo"><img src="assets/knpl-logo.png" alt="KNPL logo"></div>
+    <p class="eyebrow">Kerala Namboodiris Premier League</p>
+    <h1>Season 7</h1>
+    <p class="hero-dates">11 · 12 · 13 · 14 February 2027</p>
+    <p class="hero-venue">FISAT &amp; Boundary Cricket Grounds, Angamaly</p>
+    <div class="hero-cat">
+      <span class="kicker">Sponsorship Portal</span>
+      <strong>The “Cover Drive” Category</strong>
+      <span class="sub">Premium Sponsorships with High Impact &amp; Visibility</span>
+    </div>
+    <div class="stats">
+      <div><b>16</b><span>Teams</span></div>
+      <div><b>47</b><span>Matches</span></div>
+      <div><b>4</b><span>Days</span></div>
+      <div><b>50,000+</b><span>Followers</span></div>
+    </div>
+  </div>
+</header>
+
+<div id="promoBanner" class="promo-banner" hidden></div>
+<div id="demoBanner" class="demo-banner" hidden>
+  Demo mode — the Google Sheet is not connected yet. Entries are saved only in this browser.
+</div>
+
+<nav class="steps" aria-label="Progress">
+  <ol>
+    <li data-step="1" class="active"><span>1</span>Choose</li>
+    <li data-step="2"><span>2</span>Details</li>
+    <li data-step="3"><span>3</span>Pay</li>
+    <li data-step="4"><span>4</span>Receipt</li>
+  </ol>
+</nav>
+
+<main>
+  <!-- STEP 1: CHOOSE -->
+  <section id="step1" class="step">
+    <div class="section-head">
+      <p class="eyebrow gold">Step 1</p>
+      <h2>Choose your sponsorship</h2>
+      <p class="muted">Rates are per sponsorship slot. Slots already taken show the sponsor and the promoting team. <span id="liveNote"></span></p>
+    </div>
+
+    <article class="featured" id="featuredCard"></article>
+
+    <h3 class="group-title">Flagship &amp; Give-back sponsorships</h3>
+    <div class="grid" id="gridTop"></div>
+    <h3 class="group-title">Team, hospitality &amp; award sponsorships</h3>
+    <div class="grid" id="gridRest"></div>
+
+    <p class="loading" id="loading">Loading live slot status…</p>
+  </section>
+
+  <!-- STEP 2: DETAILS -->
+  <section id="step2" class="step" hidden>
+    <div class="section-head">
+      <p class="eyebrow gold">Step 2</p>
+      <h2>Sponsor details</h2>
+      <p class="muted">These details appear on your receipt, poster and KNPL social media.</p>
+    </div>
+    <form id="detailsForm" class="card form" novalidate>
+      <fieldset>
+        <legend>Promoter team</legend>
+        <label class="field full">
+          <span>Which franchise invited you to sponsor? <i>*</i></span>
+          <div class="team-select">
+            <img id="teamPreview" src="assets/knpl-logo.png" alt="">
+            <select name="team" id="teamSelect" required>
+              <option value="">Select the promoter team</option>
+            </select>
+          </div>
+        </label>
+      </fieldset>
+      <fieldset>
+        <legend>Sponsor</legend>
+        <div class="row">
+          <label class="field"><span>Sponsor / Company name <i>*</i></span>
+            <input name="sponsorName" required maxlength="120" autocomplete="organization" placeholder="e.g. Sreedhar Constructions Pvt Ltd"></label>
+          <label class="field"><span>Name to be advertised on social media <i>*</i></span>
+            <input name="displayName" required maxlength="80" placeholder="Exactly as it should appear"></label>
+        </div>
+        <div class="row">
+          <label class="field"><span>Contact person <i>*</i></span>
+            <input name="contactPerson" required maxlength="80" autocomplete="name"></label>
+          <label class="field"><span>Mobile (WhatsApp) <i>*</i></span>
+            <input name="mobile" required inputmode="tel" maxlength="16" autocomplete="tel" placeholder="10-digit mobile"></label>
+        </div>
+        <div class="row">
+          <label class="field"><span>Email <em>(receipt copy is mailed here)</em></span>
+            <input name="email" type="email" maxlength="120" autocomplete="email"></label>
+          <label class="field"><span>City / Address</span>
+            <input name="city" maxlength="200" autocomplete="address-level2"></label>
+        </div>
+        <label class="field full"><span>Social media handles / website <em>(optional, for tagging)</em></span>
+          <input name="social" maxlength="200" placeholder="Instagram, Facebook page, website…"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Brand material <em>(optional)</em></legend>
+        <div class="row">
+          <label class="drop" id="logoDrop">
+            <input type="file" name="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+            <div class="drop-body"><img id="logoPreview" alt="" hidden><b>Attach logo</b><span>PNG / JPG / SVG · max 5 MB<br>Transparent PNG looks best on the poster</span></div>
+          </label>
+          <label class="drop" id="leafletDrop">
+            <input type="file" name="leaflet" accept="application/pdf,image/png,image/jpeg">
+            <div class="drop-body"><b>Attach leaflet / ad</b><span>PDF / JPG / PNG · max 8 MB</span><small id="leafletName"></small></div>
+          </label>
+        </div>
+        <label class="field full"><span>Message for the KNPL team <em>(optional)</em></span>
+          <textarea name="notes" rows="2" maxlength="500"></textarea></label>
+      </fieldset>
+      <div class="form-actions">
+        <button type="button" class="btn ghost" data-go="1">← Back</button>
+        <button type="submit" class="btn gold">Continue to payment →</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- STEP 3: PAY -->
+  <section id="step3" class="step" hidden>
+    <div class="section-head">
+      <p class="eyebrow gold">Step 3</p>
+      <h2>Make the payment</h2>
+      <p class="muted">Pay to the official ONE account, then enter the transaction reference below.</p>
+    </div>
+    <div class="pay-layout">
+      <div class="card">
+        <h4 class="card-title">Your sponsorship</h4>
+        <div id="summaryList"></div>
+        <div class="total-line"><span>Total payable</span><b id="payTotal"></b></div>
+
+        <div class="upi-box">
+          <div class="qr" id="qrBox"></div>
+          <div class="upi-text">
+            <b>Scan &amp; pay with any UPI app</b>
+            <span id="qrHint">The amount is filled in for you.</span>
+            <a id="upiLink" class="btn gold small mobile-only" href="#">Pay with UPI app</a>
+            <button type="button" class="linkish" id="toggleQr">Use the brochure QR instead</button>
+          </div>
+        </div>
+
+        <h4 class="card-title">Or transfer to the bank account</h4>
+        <dl class="bank" id="bankList"></dl>
+      </div>
+
+      <form id="payForm" class="card form" novalidate>
+        <h4 class="card-title">Payment confirmation</h4>
+        <label class="field full"><span>Payment mode <i>*</i></span>
+          <select name="paymentMode" required>
+            <option value="UPI">UPI</option>
+            <option value="Bank transfer (NEFT/IMPS/RTGS)">Bank transfer (NEFT / IMPS / RTGS)</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Cash to team coordinator">Cash to team coordinator</option>
+          </select></label>
+        <label class="field full"><span id="refLabel">UPI transaction ID / UTR number <i>*</i></span>
+          <input name="txnRef" required maxlength="60" autocomplete="off" placeholder="12-digit UTR from your UPI app"></label>
+        <label class="field full"><span>Payment date <i>*</i></span>
+          <input name="paymentDate" type="date" required></label>
+        <label class="drop slim">
+          <input type="file" name="proof" accept="image/*,application/pdf">
+          <div class="drop-body"><b>Attach payment screenshot</b><span>Optional — speeds up verification</span><small id="proofName"></small></div>
+        </label>
+        <label class="check"><input type="checkbox" name="agree" required>
+          <span>I confirm the payment has been made and the details above are correct.</span></label>
+        <p class="error" id="payError" role="alert"></p>
+        <div class="form-actions">
+          <button type="button" class="btn ghost" data-go="2">← Back</button>
+          <button type="submit" class="btn gold" id="submitBtn">Submit sponsorship</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- STEP 4: DONE -->
+  <section id="step4" class="step" hidden>
+    <div class="thanks card">
+      <div class="thanks-badge">✓</div>
+      <p class="eyebrow gold">Thank you</p>
+      <h2 id="thanksName">Welcome aboard!</h2>
+      <p class="muted" id="thanksText"></p>
+      <div class="receipt-chip">Receipt No. <b id="receiptNo"></b></div>
+      <div class="dl-actions">
+        <button class="btn gold" id="dlReceipt">Download receipt (PDF)</button>
+        <button class="btn outline" id="dlPoster">Download sponsor poster</button>
+        <a class="btn ghost" id="shareWa" target="_blank" rel="noopener">Share on WhatsApp</a>
+      </div>
+      <div class="poster-preview"><canvas id="posterCanvas" width="1080" height="1350"></canvas></div>
+      <button class="btn ghost" id="newSponsor">Sponsor another slot</button>
+    </div>
+  </section>
+</main>
+
+<!-- Sticky cart -->
+<div class="cart" id="cart" hidden>
+  <div class="cart-inner">
+    <div><span id="cartCount"></span><b id="cartTotal"></b></div>
+    <button class="btn gold" id="cartNext">Continue →</button>
+  </div>
+</div>
+
+<footer class="site-foot">
+  <div class="foot-org">
+    <img src="assets/one-logo.png" alt="ONE logo">
+    <div>
+      <b>Kerala Namboodiris Premier League</b>
+      <span>Organised by ONE (Organization For Namboodiris Evolution) · Reg. No. 238/IV/24</span>
+      <span>Questions? Contact your Team Coordinator / KNPL Core Group.</span>
+    </div>
+  </div>
+  <button class="btn ghost small" id="openLookup">Already sponsored? Download receipt &amp; poster again</button>
+  <p class="tagline">Making the impossible a reality.</p>
+</footer>
+
+<dialog id="lookupDlg">
+  <form method="dialog" id="lookupForm" class="form">
+    <h3>Find my sponsorship</h3>
+    <label class="field full"><span>Receipt number</span><input name="receipt" required placeholder="KNPL7-CD-0001"></label>
+    <label class="field full"><span>Mobile number used</span><input name="mobile" required inputmode="tel"></label>
+    <p class="error" id="lookupError"></p>
+    <div class="form-actions">
+      <button value="cancel" class="btn ghost" formnovalidate>Close</button>
+      <button class="btn gold" id="lookupBtn" value="go">Find</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="js/vendor/pdf-lib.min.js" defer></script>
+<script src="js/vendor/qr.js"></script>
+<script src="js/config.js"></script>
+<script src="js/poster.js"></script>
+<script src="js/receipt.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
