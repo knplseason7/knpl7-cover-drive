@@ -7,7 +7,7 @@ window.KNPL_CONFIG = {
   /* 1. Paste your Google Apps Script Web App URL here after deployment
         (ends with /exec). Leave empty to run the portal in DEMO mode —
         demo entries are stored only in your own browser. */
-  API_URL: "",
+  API_URL: "   API_URL: "https://script.google.com/macros/s/AKfy.../exec",",
 
   /* 2. Event details (printed on receipts and posters) */
   EVENT: {
