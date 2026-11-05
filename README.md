@@ -89,16 +89,25 @@ Each franchise owner can share a personal link — the promoter team is pre-sele
 
 Add `?team=11` (etc.) to the status link and the promoter team is carried through to the form.
 
-## Running the drive (admin)
+## Running the drive (admin) — approval flow
 
-- New entries arrive with Status **Pending Verification**. The slot is reserved immediately (no double-booking — the script locks while checking availability).
-- Check the bank/UPI statement against the **Transaction Ref / UTR** column and change Status to **Confirmed**.
-- Set Status to **Rejected** for a payment that never arrived — the slot opens up again on the website.
-- On the website, sponsored slots show the advertised name and promoter team; unverified ones carry a small "verifying" tag.
-- The **Summary** sheet shows booked / confirmed / available slots and the confirmed amount per sponsorship.
-- Logos, leaflets and payment screenshots are linked in each row (Drive folder).
-- Sponsors can re-download their receipt and poster any time via **"Already sponsored?"** at the bottom of the page (receipt no. + mobile).
-- The same transaction reference cannot be used twice.
+1. A sponsor submits the form → a **request** (e.g. `KNPL7-CD-0007`) is saved with Status **Pending Verification**.
+   The slot is reserved and shown everywhere as **"Sponsorship attempted · Request under approval"**.
+   The sponsor sees an "under approval" page — **no receipt or poster yet**.
+2. Check the bank / UPI statement against the **Transaction Ref / UTR** column.
+3. In the Google Sheet, click any cell of the request row → menu **KNPL Admin ▸ ✅ Approve selected request(s)**.
+   - Status becomes **Confirmed**, the sponsor gets a confirmation e-mail (if given), and a **Send WhatsApp** link
+     appears in the last column with a ready message.
+   - The sponsor can now download the receipt and poster (portal ▸ *Check approval / download* or the link in the message).
+4. Payment never arrived? **KNPL Admin ▸ ❌ Reject selected request(s)** — the slot opens again.
+5. **KNPL Admin ▸ ⏳ Release requests pending more than 48 h** rejects all unpaid requests in one go.
+
+The KNPL Admin menu appears when the Sheet is opened (reload the Sheet once after updating the script).
+
+### Removing test / dummy entries
+- **Some entries:** select the rows → **KNPL Admin ▸ 🗑 Delete selected entries**.
+- **Everything:** **KNPL Admin ▸ ♻ Reset ALL entries** → type `RESET`. All rows are deleted and numbering restarts at `KNPL7-CD-0001`.
+- The website and status page pick up the change within a minute.
 
 ## Editing
 

@@ -77,6 +77,16 @@
     updateCart();
   }
 
+  // approved vs. awaiting-approval slot counts for an item
+  const counts = it => {
+    let ok = 0, wait = 0;
+    (it.sponsors || []).forEach(s => { if (s.confirmed) ok += s.qty || 1; else wait += s.qty || 1; });
+    return { ok, wait };
+  };
+  const fullBadge = it => counts(it).wait
+    ? `<span class="badge wait">⏳ Sponsorship attempted · Under approval</span>`
+    : `<span class="badge sold">✓ ${it.slots > 1 ? "All slots sponsored" : "Sponsored"}</span>`;
+
   function sponsorList(it) {
     if (!it.sponsors || !it.sponsors.length) return "";
     const grouped = [];
@@ -87,8 +97,8 @@
     });
     return `<ul class="sponsors">${grouped.map(s => {
       const t = teamByName(s.jerseys && s.jerseys.length === 1 ? s.jerseys[0] : s.team);
-      return `<li>${t ? `<img src="${t.logo}" alt="">` : ""}<div><b>${esc(s.name)}${s.qty > 1 ? " × " + s.qty : ""}</b>
-        <small>${s.jerseys ? "Jersey: " + s.jerseys.map(esc).join(", ") + " · " : ""}Promoted by ${esc(s.team)}${s.confirmed ? "" : ' · <span class="pend">verifying</span>'}</small></div></li>`;
+      return `<li class="${s.confirmed ? "" : "pending-row"}">${t ? `<img src="${t.logo}" alt="">` : ""}<div><b>${esc(s.name)}${s.qty > 1 ? " × " + s.qty : ""}</b>
+        <small>${s.jerseys ? "Jersey: " + s.jerseys.map(esc).join(", ") + " · " : ""}Promoted by ${esc(s.team)}${s.confirmed ? "" : ' · <span class="pend">Sponsorship attempted · request under approval</span>'}</small></div></li>`;
     }).join("")}</ul>`;
   }
 
@@ -99,7 +109,7 @@
     const no = it.code.replace("CD", "");
     const csrLogo = it.csr ? `<img class="csr" src="assets/${it.csr}.png" alt="${it.csr}">` : "";
     let pick;
-    if (full) pick = `<span class="badge sold">✓ All slots sponsored</span>`;
+    if (full) pick = fullBadge(it);
     else if (it.perTeam) pick = `
       ${sel ? `<div class="chips">${state.jersey.map(t => `<span class="chip"><img src="${teamByName(t).logo}" alt="">${esc(t)}</span>`).join("")}</div>` : ""}
       <div class="pick"><span class="tick"><i>${sel ? "✓" : ""}</i>${sel ? sel + (sel === 1 ? " team" : " teams") + " · " + inr(sel * it.rate) : "Teams"}</span>
@@ -129,7 +139,7 @@
         <p>A hand-carved wooden trophy that passes from champion to champion for 15 years, starting with Season 7 in 2027. Sponsor it, and your brand is associated with every KNPL champion who lifts it.</p>
         <div class="row-f">
           <div><div class="rate">${inr(it.rate)}</div><span class="fine">1 slot · 15 years · Design image for reference only</span></div>
-          ${full ? `<span class="badge sold">✓ Sponsored</span>` :
+          ${full ? fullBadge(it) :
             `<button type="button" class="btn ${sel ? "outline" : "gold"}" data-feature="${it.code}">${sel ? "✓ Selected — tap to remove" : "Sponsor the trophy"}</button>`}
         </div>
         ${sponsorList(it)}
@@ -373,17 +383,34 @@
   /* ---------------------------- step 4 ---------------------------- */
   async function showDone() {
     const r = state.result, d = r.data;
+    const status = r.status || "Pending Verification";
+    $("#pendingView").hidden = status !== "Pending Verification";
+    $("#rejectedView").hidden = status !== "Rejected";
+    $("#doneView").hidden = status !== "Confirmed";
+    $$(".steps li")[3].lastChild.textContent = status === "Confirmed" ? "Receipt" : "Done";
+    state.cart = {}; state.jersey = [];
+
+    if (status === "Pending Verification") {
+      $("#pendName").textContent = "Thank you, " + d.displayName + "!";
+      $("#pendText").innerHTML = `Your sponsorship request of <b>${inr(r.total)}</b>, promoted by <b>${esc(d.team)}</b>, has been received and is <b>under approval</b>.`;
+      $("#pendNo").textContent = $("#pendNo2").textContent = r.receiptNo;
+      go(4); loadStatus(); return;
+    }
+    if (status === "Rejected") { $("#rejNo").textContent = r.receiptNo; go(4); loadStatus(); return; }
+
     $("#thanksName").textContent = "Thank you, " + d.displayName + "!";
-    $("#thanksText").innerHTML = `Your sponsorship of <b>${inr(r.total)}</b> has been recorded. Your payment will be verified by the KNPL Core Group.
+    $("#thanksText").innerHTML = `Your sponsorship of <b>${inr(r.total)}</b> is <b>confirmed</b>. Download your official receipt and sponsor poster below.
       We warmly welcome you to <b>KNPL Season 7</b> at ${esc(C.EVENT.venue)}, ${esc(C.EVENT.datesShort)}.`;
     $("#receiptNo").textContent = r.receiptNo;
     const msg = `I'm proud to sponsor ${C.EVENT.tag} (${C.EVENT.league}) — "${C.EVENT.category}" category, promoted by ${d.team}. ${C.EVENT.datesShort} at ${C.EVENT.venue}. Sponsor here: ${location.origin + location.pathname}`;
     $("#shareWa").href = "https://wa.me/?text=" + encodeURIComponent(msg);
     go(4);
     await window.KNPLPoster.draw($("#posterCanvas"), posterData());
-    state.cart = {}; state.jersey = [];
     loadStatus();
   }
+
+  // receipt and poster only for approved sponsorships
+  const approved = () => state.result && state.result.status === "Confirmed";
 
   const posterData = () => ({ result: state.result, logo: state.logoPng, team: teamByName(state.result.data.team), cfg: C });
 
@@ -405,6 +432,15 @@
     state.logoPng = res.logoData ? await toPng(res.logoData) : null;
     state.result = res;
     return res;
+  }
+
+  function openLookup(receipt, mobile) {
+    const f = $("#lookupForm");
+    $("#lookupError").textContent = "";
+    if (receipt) f.receipt.value = receipt;
+    if (mobile) f.mobile.value = String(mobile).replace(/^'/, "");
+    $("#lookupDlg").showModal();
+    (receipt ? f.mobile : f.receipt).focus();
   }
 
   /* ---------------------------- misc ---------------------------- */
@@ -475,21 +511,33 @@
       submitAll();
     });
 
-    $("#dlReceipt").addEventListener("click", () => window.KNPLReceipt.download(posterData()));
-    $("#dlPoster").addEventListener("click", downloadPoster);
-    $("#newSponsor").addEventListener("click", () => {
+    $("#dlReceipt").addEventListener("click", () => { if (approved()) window.KNPLReceipt.download(posterData()); });
+    $("#dlPoster").addEventListener("click", () => { if (approved()) downloadPoster(); });
+    const restart = () => {
       state.result = null; $("#payForm").reset(); $("#proofName").textContent = ""; state.files.proof = null;
       go(1);
+    };
+    ["#newSponsor", "#pendNew", "#rejBack"].forEach(id => $(id).addEventListener("click", restart));
+    $("#pendCopy").addEventListener("click", () => {
+      const no = state.result && state.result.receiptNo;
+      if (no && navigator.clipboard) navigator.clipboard.writeText(no);
+      toast("Request number copied: " + no);
     });
+    $("#pendCheck").addEventListener("click", () => openLookup(state.result && state.result.receiptNo, state.result && state.result.data && state.result.data.mobile));
 
     const dlg = $("#lookupDlg");
-    $("#openLookup").addEventListener("click", () => { $("#lookupError").textContent = ""; dlg.showModal(); });
+    $("#openLookup").addEventListener("click", () => openLookup());
     $("#lookupForm").addEventListener("submit", async e => {
       if (e.submitter && e.submitter.value === "cancel") return;
       e.preventDefault();
       const f = Object.fromEntries(new FormData(e.target));
       const b = $("#lookupBtn"); b.disabled = true; b.textContent = "Searching…";
-      try { await lookup(f.receipt.trim(), f.mobile.trim()); dlg.close(); showDone(); }
+      try {
+        const res = await lookup(f.receipt.trim().toUpperCase(), f.mobile.trim());
+        dlg.close();
+        if (res.status === "Pending Verification") toast("Not approved yet — your request is still under approval.");
+        showDone();
+      }
       catch (err) { $("#lookupError").textContent = err.message; }
       finally { b.disabled = false; b.textContent = "Find"; }
     });
@@ -513,4 +561,7 @@
   bind();
   render();
   loadStatus();
+  // link from the approval e-mail / WhatsApp: ?receipt=KNPL7-CD-0001
+  const rq = new URLSearchParams(location.search).get("receipt");
+  if (rq) setTimeout(() => openLookup(rq.toUpperCase()), 400);
 })();

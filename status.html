@@ -29,6 +29,17 @@
     .kpi b{display:block;font-family:var(--serif);font-size:clamp(24px,5vw,34px);color:var(--gold);line-height:1.1}
     .kpi span{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
     .kpi.open b{color:var(--ok)}
+    .kpi.wait b{color:var(--warn)}
+    .meter.two{display:flex}
+    .meter.two i{border-radius:0}
+    .meter.two i.w{background:repeating-linear-gradient(45deg,var(--warn) 0 6px,rgba(240,181,74,.55) 6px 12px)}
+    .lg{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--gold)}
+    .lg.w{background:var(--warn)}
+    .sub-wait{font-size:11.5px;color:var(--warn);margin-top:5px}
+    .jg.waiting{border-color:var(--warn)}
+    .jg.waiting img{filter:grayscale(.6) brightness(.7)}
+    .jg.waiting::after{content:"⏳";position:absolute;inset:0;display:grid;place-items:center;font-size:13px}
+    .badge.wait{background:rgba(240,181,74,.14);color:var(--warn);border:1px solid rgba(240,181,74,.4)}
     .progress{margin:14px 0 4px}
     .progress .meter{height:10px}
     .progress .slot-line{margin-top:6px}
@@ -138,7 +149,7 @@
     <p class="muted" style="margin:-4px 0 14px;font-size:13px">Sponsorships brought in by each franchise and their value (pending verification included). Tap a team to see its sponsors.</p>
     <div class="card tsum" id="teamTotals"></div>
     <div class="board" id="board"></div>
-    <p class="note">Rows marked <span style="color:var(--warn)">verifying</span> are reserved and awaiting payment confirmation by the KNPL Core Group. The page refreshes automatically every minute.</p>
+    <p class="note"><span style="color:var(--warn)">Sponsorship attempted · request under approval</span> means the slot is reserved and waiting for payment verification by the KNPL Core Group. It becomes “Sponsored” once approved, or available again if not approved. The page refreshes automatically every minute.</p>
   </section>
 </main>
 
@@ -221,14 +232,17 @@
     const sponsorNames = new Set(items.flatMap(i => i.sponsors.map(s => s.name.trim().toLowerCase())));
     const fullItems = items.filter(i => i.taken >= i.slots).length;
 
+    let okSlots = 0, waitSlots = 0;
+    items.forEach(i => i.sponsors.forEach(s => { if (s.confirmed) okSlots += s.qty || 1; else waitSlots += s.qty || 1; }));
+    const pc = n => totalSlots ? (n / totalSlots) * 100 : 0;
     $("#kpis").innerHTML = `
-      <div class="kpi"><b>${taken}</b><span>Slots sponsored</span></div>
+      <div class="kpi"><b>${okSlots}</b><span>Slots sponsored</span></div>
+      <div class="kpi wait"><b>${waitSlots}</b><span>Under approval</span></div>
       <div class="kpi open"><b>${open}</b><span>Slots available</span></div>
-      <div class="kpi"><b>${sponsorNames.size}</b><span>Sponsors</span></div>
-      <div class="kpi"><b>${fullItems}/${items.length}</b><span>Fully sponsored</span></div>`;
+      <div class="kpi"><b>${sponsorNames.size}</b><span>Sponsors</span></div>`;
     $("#progress").innerHTML = `
-      <div class="meter"><i style="width:${totalSlots ? (taken / totalSlots) * 100 : 0}%"></i></div>
-      <div class="slot-line"><span>${taken} of ${totalSlots} slots sponsored</span><span>${Math.round(totalSlots ? taken / totalSlots * 100 : 0)}%</span></div>`;
+      <div class="meter two"><i style="width:${pc(okSlots)}%"></i><i class="w" style="width:${pc(waitSlots)}%"></i></div>
+      <div class="slot-line"><span><b class="lg ok"></b>${okSlots} sponsored &nbsp; <b class="lg w"></b>${waitSlots} under approval &nbsp; of ${totalSlots} slots</span><span>${Math.round(pc(okSlots + waitSlots))}% booked</span></div>`;
     $("#openCount").textContent = open + (open === 1 ? " slot still open" : " slots still open");
     $("#openAmt").textContent = open ? "Worth " + inr(openValue) : "All sponsored — thank you!";
 
@@ -250,7 +264,7 @@
     const grand = ranked.reduce((a, t) => a + t.amt, 0), grandConf = ranked.reduce((a, t) => a + t.conf, 0);
     const active = ranked.filter(t => t.amt).length;
     $("#teamTotals").innerHTML = `
-      <div><span>Total sponsorship value</span><b>${inr(grand)}</b></div>
+      <div><span>Total value (incl. under approval)</span><b>${inr(grand)}</b></div>
       <div><span>Payment confirmed</span><b>${inr(grandConf)}</b></div>
       <div><span>Teams contributing</span><b>${active} / ${C.TEAMS.length}</b></div>`;
     let rank = 0, prev = null;
@@ -261,22 +275,24 @@
         <div class="val"><b>${inr(t.amt)}</b>${t.amt && t.conf !== t.amt ? `<small>${inr(t.conf)} confirmed</small>` : ""}</div>`;
       if (!t.amt) return `<div class="bt zero">${head}</div>`;
       return `<details class="bt"><summary>${head}</summary><ul class="tlist">${t.list.map(x =>
-        `<li><span><b>${esc(x.name)}</b><small>${esc(x.label)}${x.confirmed ? "" : ' · <span class="pend">verifying</span>'}</small></span><span class="amt">${inr(x.v)}</span></li>`).join("")}</ul></details>`;
+        `<li><span><b>${esc(x.name)}</b><small>${esc(x.label)}${x.confirmed ? "" : ' · <span class="pend">Sponsorship attempted · request under approval</span>'}</small></span><span class="amt">${inr(x.v)}</span></li>`).join("")}</ul></details>`;
     }).join("");
   }
 
   function row(it) {
     const left = Math.max(0, it.slots - it.taken), full = left === 0;
     const pct = (Math.min(it.taken, it.slots) / it.slots) * 100;
-    const badge = full ? `<span class="badge sold">✓ Fully sponsored</span>`
+    const wait = (it.sponsors || []).filter(s => !s.confirmed).reduce((a, s) => a + (s.qty || 1), 0);
+    const badge = full ? (wait ? `<span class="badge wait">⏳ Sponsorship attempted</span><div class="sub-wait">Request under approval</div>` : `<span class="badge sold">✓ Fully sponsored</span>`)
       : left <= Math.max(1, Math.floor(it.slots * 0.25)) && it.slots > 1 ? `<span class="badge few">Only ${left} left</span>`
       : `<span class="badge open">${it.slots > 1 ? left + " available" : "Available"}</span>`;
     const g = group(it.sponsors || []);
     let who;
     if (it.perTeam) {
-      const takenT = Object.fromEntries((it.sponsors || []).filter(s => s.jerseyTeam).map(s => [s.jerseyTeam, s.name]));
-      who = `<div class="jgrid">${C.TEAMS.map(t => `<div class="jg ${takenT[t.name] ? "taken" : "open"}" title="${esc(t.name)}${takenT[t.name] ? " — sponsored by " + esc(takenT[t.name]) : " — available"}"><img src="${t.logo}" alt="${esc(t.name)}"></div>`).join("")}</div>
-        <div class="jlegend"><b>Green ring</b> = jersey available · ✓ = sponsored</div>
+      const takenT = Object.fromEntries((it.sponsors || []).filter(s => s.jerseyTeam).map(s => [s.jerseyTeam, s]));
+      who = `<div class="jgrid">${C.TEAMS.map(t => { const x = takenT[t.name];
+        return `<div class="jg ${x ? (x.confirmed ? "taken" : "waiting") : "open"}" title="${esc(t.name)}${x ? (x.confirmed ? " — sponsored by " : " — under approval for ") + esc(x.name) : " — available"}"><img src="${t.logo}" alt="${esc(t.name)}"></div>`; }).join("")}</div>
+        <div class="jlegend"><b>Green ring</b> = available · <span style="color:var(--warn)">⏳ amber</span> = under approval · ✓ = sponsored</div>
         ${g.map(sp).join("")}`;
     } else {
       who = g.length ? g.map(sp).join("") : `<span class="none">Be the first to sponsor this</span>`;
@@ -293,7 +309,7 @@
   function sp(s) {
     const t = team(s.jerseys && s.jerseys.length === 1 ? s.jerseys[0] : s.team);
     return `<div class="sp">${t ? `<img src="${t.logo}" alt="">` : ""}<div><b>${esc(s.name)}${!s.jerseys && s.qty > 1 ? " × " + s.qty : ""}</b>
-      <small>${s.jerseys ? "Jersey: " + s.jerseys.map(esc).join(", ") + " · " : ""}Promoted by ${esc(s.team)}${s.confirmed ? "" : ' · <span class="pend">verifying</span>'}</small></div></div>`;
+      <small>${s.jerseys ? "Jersey: " + s.jerseys.map(esc).join(", ") + " · " : ""}Promoted by ${esc(s.team)}${s.confirmed ? "" : ' · <span class="pend">Sponsorship attempted · request under approval</span>'}</small></div></div>`;
   }
 
   document.querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => {

@@ -48,7 +48,7 @@
     <li data-step="1" class="active"><span>1</span>Choose</li>
     <li data-step="2"><span>2</span>Details</li>
     <li data-step="3"><span>3</span>Pay</li>
-    <li data-step="4"><span>4</span>Receipt</li>
+    <li data-step="4"><span>4</span>Done</li>
   </ol>
 </nav>
 
@@ -196,9 +196,39 @@
 
   <!-- STEP 4: DONE -->
   <section id="step4" class="step" hidden>
-    <div class="thanks card">
+    <!-- shown while the request is waiting for payment verification -->
+    <div class="thanks card" id="pendingView" hidden>
+      <div class="thanks-badge pending-badge">⏳</div>
+      <p class="eyebrow gold">Request received · Under approval</p>
+      <h2 id="pendName">Thank you!</h2>
+      <p class="muted" id="pendText"></p>
+      <div class="receipt-chip">Request No. <b id="pendNo"></b></div>
+      <ol class="next-steps">
+        <li><b>Slot reserved.</b> Your sponsorship is shown as <i>“Sponsorship attempted · Request under approval”</i> so no one else can take it.</li>
+        <li><b>Payment verification.</b> The KNPL Core Group checks your payment against the reference you entered. If you haven't paid yet, please pay now using the details on the previous step.</li>
+        <li><b>Approval.</b> Once approved you'll get a confirmation (e-mail / WhatsApp). Then open this portal, tap <i>“Check approval / download receipt”</i> and enter your request number and mobile number to download your <b>official receipt</b> and <b>sponsor poster</b>.</li>
+      </ol>
+      <p class="fine-note">Please save your request number: <b id="pendNo2"></b>. Requests not paid within 48 hours may be released.</p>
+      <div class="dl-actions">
+        <button class="btn outline" id="pendCheck">Check approval status</button>
+        <button class="btn ghost" id="pendCopy">Copy request number</button>
+      </div>
+      <button class="btn ghost" id="pendNew">Sponsor another slot</button>
+    </div>
+
+    <!-- rejected / not approved -->
+    <div class="thanks card" id="rejectedView" hidden>
+      <div class="thanks-badge rej-badge">!</div>
+      <p class="eyebrow gold">Request not approved</p>
+      <h2>Request <span id="rejNo"></span></h2>
+      <p class="muted">This request could not be approved — usually because the payment could not be matched. Please contact your promoter team coordinator or the KNPL Core Group.</p>
+      <button class="btn ghost" id="rejBack">Back to sponsorships</button>
+    </div>
+
+    <!-- shown only after approval -->
+    <div class="thanks card" id="doneView">
       <div class="thanks-badge">✓</div>
-      <p class="eyebrow gold">Thank you</p>
+      <p class="eyebrow gold">Sponsorship confirmed · Thank you</p>
       <h2 id="thanksName">Welcome aboard!</h2>
       <p class="muted" id="thanksText"></p>
       <div class="receipt-chip">Receipt No. <b id="receiptNo"></b></div>
@@ -231,14 +261,15 @@
     </div>
   </div>
   <a class="btn ghost small" href="status.html">Live sponsorship status &amp; team summary</a>
-  <button class="btn ghost small" id="openLookup">Already sponsored? Download receipt &amp; poster again</button>
+  <button class="btn ghost small" id="openLookup">Check approval / download receipt &amp; poster</button>
   <p class="tagline">Making the impossible a reality.</p>
 </footer>
 
 <dialog id="lookupDlg">
   <form method="dialog" id="lookupForm" class="form">
-    <h3>Find my sponsorship</h3>
-    <label class="field full"><span>Receipt number</span><input name="receipt" required placeholder="KNPL7-CD-0001"></label>
+    <h3>Check approval / download</h3>
+    <p class="muted" style="margin:-6px 0 12px;font-size:13px">Receipt and poster become available once the KNPL Core Group approves your sponsorship.</p>
+    <label class="field full"><span>Request / receipt number</span><input name="receipt" required placeholder="KNPL7-CD-0001" autocapitalize="characters"></label>
     <label class="field full"><span>Mobile number used</span><input name="mobile" required inputmode="tel"></label>
     <p class="error" id="lookupError"></p>
     <div class="form-actions">
