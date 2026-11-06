@@ -47,7 +47,7 @@ window.KNPL_CONFIG = {
     { code: "CD03", name: "KNPL-7 Runners-Up Sponsor",         slots: 1,  rate: 30000,  flagship: true },
     { code: "CD04", name: "KNPL-7 Sahayog Sponsor",            slots: 2,  rate: 25000,  csr: "sahayog" },
     { code: "CD05", name: "KNPL-7 Farmrise Sponsor",           slots: 2,  rate: 15000,  csr: "farmrise" },
-    { code: "CD06", name: "KNPL-7 \"Bronze Brigade\" Award - 1", slots: 1, rate: 15000 },
+    { code: "CD06", name: "KNPL-7 \"Bronze Brigade\" Award", slots: 2, rate: 15000, desc: "Semi Finalists" },
     { code: "CD07", name: "KNPL Team Jersey Sponsor",          slots: 16, rate: 7500, perTeam: true, note: "One slot per team jersey" },
     { code: "CD08", name: "KNPL-7 Lunch Sponsor",              slots: 20, rate: 5000 },
     { code: "CD09", name: "KNPL-7 Fair Play Award Sponsor",    slots: 1,  rate: 5000 },

@@ -299,7 +299,7 @@
     }
     return `<div class="srow ${full ? "done" : ""}">
       <span class="no">${it.code.replace("CD", "")}</span>
-      <div><h4>${esc(it.name)}</h4><div class="rate">${inr(it.rate)}${it.slots > 1 ? " <small>/ " + (it.perTeam ? "team" : "slot") + "</small>" : ""}</div></div>
+      <div><h4>${esc(it.name)}</h4>${it.desc ? `<span class="item-desc">${esc(it.desc)}</span>` : ""}<div class="rate">${inr(it.rate)}${it.slots > 1 ? " <small>/ " + (it.perTeam ? "team" : "slot") + "</small>" : ""}</div></div>
       <div class="avail">${badge}${it.slots > 1 ? `<div class="meter" style="margin-top:8px"><i style="width:${pct}%"></i></div><div class="slot-line"><span>${it.taken} of ${it.slots} taken</span></div>` : ""}</div>
       <div class="who">${who}</div>
       <div class="act">${full ? "" : `<a class="btn gold small" href="${formUrl(it.code)}">Sponsor this →</a>`}</div>

@@ -118,7 +118,7 @@
         <div class="qty" data-qty="${it.code}"><button type="button" data-d="-1" aria-label="Fewer" ${sel ? "" : "disabled"}>−</button><span>${sel}</span><button type="button" data-d="1" aria-label="More" ${sel >= left ? "disabled" : ""}>+</button></div></div>`;
     else pick = `<div class="pick"><span class="tick"><i>${sel ? "✓" : ""}</i>${sel ? "Selected" : "Select"}</span></div>`;
     return `<div class="item ${it.flagship ? "flag" : ""} ${sel ? "selected" : ""} ${full ? "full" : ""}" data-code="${it.code}" ${full ? "" : 'tabindex="0" role="button"'} aria-pressed="${!!sel}">
-      <div class="item-top"><div><span class="item-no">${no}</span><h4>${esc(it.name)}</h4></div>${csrLogo}</div>
+      <div class="item-top"><div><span class="item-no">${no}</span><h4>${esc(it.name)}</h4>${it.desc ? `<span class="item-desc">${esc(it.desc)}</span>` : ""}</div>${csrLogo}</div>
       <div class="rate">${inr(it.rate)}${it.slots > 1 ? '<small style="font-size:12px;color:var(--muted);font-family:var(--sans);font-weight:500"> / slot</small>' : ""}</div>
       ${it.slots > 1 ? `<div class="meter"><i style="width:${(it.taken / it.slots) * 100}%"></i></div>
         <div class="slot-line"><span>${it.taken} of ${it.slots} taken</span><span>${left} left</span></div>`
